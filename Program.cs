@@ -28,7 +28,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         // Use paths relative to the app; UsePathBase() añadirá el PathBase al generar/redirigir
         options.LoginPath = "/Login";
-        options.LogoutPath = "/Login/Logout";
+		options.LogoutPath = "/Login/Logout";
         options.ExpireTimeSpan = TimeSpan.FromMinutes(25);
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
@@ -58,7 +58,20 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
-app.UsePathBase(pathBase);
+var pbString = new PathString(pathBase);
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments(pbString, out var matched, out var remaining))
+    {
+        context.Request.PathBase = pbString;
+        context.Request.Path = remaining;
+    }
+    else
+    {
+        context.Request.PathBase = pbString;
+    }
+    await next();
+});
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
