@@ -24,7 +24,7 @@ namespace formulario_olv.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index", "Inicio");
+                return Redirect("~/Inicio/Index");
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -79,12 +79,13 @@ namespace formulario_olv.Controllers
 
             _logger.LogInformation("Usuario {Usuario} inició sesión", resultado.Usuario);
 
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
-
-            return RedirectToAction("Index", "Inicio");
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
+			{
+				// Si la URL es válida y no es simplemente la raíz cruda, redirige ahí
+				return Redirect(returnUrl);
+			}
+			// Forzamos la ruta completa
+			return Redirect("~/Inicio/Index");
         }
 
         // GET: /Login/Otp
@@ -152,7 +153,7 @@ namespace formulario_olv.Controllers
 
             _logger.LogInformation("Usuario {Usuario} completó 2FA e inició sesión", resultado.Usuario);
 
-            return RedirectToAction("Index", "Inicio");
+            return Redirect("~/Inicio/Index");
         }
 
         // POST: /Login/ReenviarOtp
