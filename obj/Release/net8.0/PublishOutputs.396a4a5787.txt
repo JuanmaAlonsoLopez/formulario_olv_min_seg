@@ -1,0 +1,8 @@
+D:\sistemas\formulario_olv\formulario_olv.exe
+D:\sistemas\formulario_olv\appsettings.Development.json
+D:\sistemas\formulario_olv\appsettings.json
+D:\sistemas\formulario_olv\appsettings.Production.json
+D:\sistemas\formulario_olv\formulario_olv.dll
+D:\sistemas\formulario_olv\formulario_olv.deps.json
+D:\sistemas\formulario_olv\formulario_olv.runtimeconfig.json
+D:\sistemas\formulario_olv\formulario_olv.pdb

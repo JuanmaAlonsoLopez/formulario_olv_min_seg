@@ -1,0 +1,333 @@
+@model formulario_olv.Models.BusquedaViewModel
+@{
+    ViewData["Title"] = "Buscar Legajo";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8">
+            <!-- Encabezado -->
+            <div class="text-center mb-4">
+                <h2 class="mb-3">
+                    <i class="bi bi-search me-2"></i>Buscar Legajo
+                </h2>
+                <p class="text-muted">Escriba el nombre, apellido o n&uacute;mero de legajo para buscar</p>
+            </div>
+
+            <!-- Barra de b&uacute;squeda con autocompletado -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row justify-content-center">
+                        <div class="col-md-10">
+                            <label for="busqueda" class="form-label">Buscar persona</label>
+                            <div class="position-relative">
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="busqueda"
+                                           autocomplete="off"
+                                           placeholder="Escriba nombre, apellido o n&uacute;mero de legajo...">
+                                    <span class="input-group-text" id="loading-indicator" style="display: none;">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </span>
+                                </div>
+                                <!-- Dropdown de resultados -->
+                                <div id="resultados-busqueda" class="position-absolute w-100 bg-white border rounded-bottom shadow-lg" style="display: none; z-index: 1050; max-height: 400px; overflow-y: auto;">
+                                </div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Escriba al menos 2 caracteres para comenzar la b&uacute;squeda
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personas asignadas -->
+            @if (Model.LegajosAsignados != null && Model.LegajosAsignados.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-check me-2"></i>Personas Asignadas
+                            <span class="badge bg-light text-primary ms-2">@Model.LegajosAsignados.Count</span>
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Legajo</th>
+                                        <th>Nombre y Apellido</th>
+                                        <th>Direcci&oacute;n</th>
+                                        <th>Nivel Riesgo</th>
+                                        <th>Prioridad</th>
+                                        <th>&Uacute;ltima Entrevista</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var legajo in Model.LegajosAsignados)
+                                    {
+                                        var prioridadClass = legajo.Prioridad == "Alta" ? "text-danger fw-bold"
+                                            : legajo.Prioridad == "Media" ? "text-warning fw-bold"
+                                            : "text-muted";
+                                        <tr>
+                                            <td>@legajo.IdLegajo</td>
+                                            <td class="fw-semibold">@legajo.NombreApellido</td>
+                                            <td><small>@legajo.Direccion</small></td>
+                                            <td>
+                                                @{
+                                                    var riesgoBadge = legajo.NivelRiesgo switch
+                                                    {
+                                                        "Alto" => "bg-danger",
+                                                        "Medio" => "bg-warning text-dark",
+                                                        "Bajo" => "bg-success",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @riesgoBadge">@legajo.NivelRiesgo</span>
+                                            </td>
+                                            <td class="@prioridadClass">@legajo.Prioridad</td>
+                                            <td>
+                                                @if (legajo.FechaUltimaEntrevista.HasValue)
+                                                {
+                                                    @legajo.FechaUltimaEntrevista.Value.ToString("dd/MM/yyyy")
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Sin entrevistas</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a asp-controller="Inicio" asp-action="Busqueda" asp-route-idLegajo="@legajo.IdLegajo" asp-route-tipoLegajoId="@legajo.TipoLegajoId" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-arrow-right-circle"></i> Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Instrucciones -->
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-lightbulb me-2"></i>C&oacute;mo buscar</h5>
+                    <ul class="mb-0">
+                        <li>Escriba el <strong>nombre</strong> o <strong>apellido</strong> de la persona</li>
+                        <li>Puede buscar por <strong>n&uacute;mero de legajo</strong> (ej: 001234)</li>
+                        <li>Seleccione de la lista la persona que desea ver</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .resultado-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.15s ease;
+    }
+    .resultado-item:last-child {
+        border-bottom: none;
+    }
+    .resultado-item:hover,
+    .resultado-item.active {
+        background-color: #e7f1ff;
+    }
+    .resultado-nombre {
+        font-weight: 600;
+        color: #333;
+    }
+    .resultado-legajo {
+        font-size: 0.875rem;
+        color: #0d6efd;
+    }
+    .resultado-domicilio {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .no-resultados {
+        padding: 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+    #busqueda:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputBusqueda = document.getElementById('busqueda');
+        const resultadosDiv = document.getElementById('resultados-busqueda');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        let timeoutId = null;
+        let indiceSeleccionado = -1;
+        let resultadosActuales = [];
+
+        // Funci&oacute;n para buscar personas
+        async function buscarPersonas(termino) {
+            if (termino.length < 2) {
+                resultadosDiv.style.display = 'none';
+                return;
+            }
+
+            loadingIndicator.style.display = 'block';
+
+            try {
+                // Usar ruta relativa para que funcione en sub-aplicaciones de IIS
+                const response = await fetch('@Url.Action("BuscarPersonas", "Inicio")?termino=' + encodeURIComponent(termino));
+                const datos = await response.json();
+
+                resultadosActuales = datos;
+                indiceSeleccionado = -1;
+
+                if (datos.length === 0) {
+                    resultadosDiv.innerHTML = `
+                        <div class="no-resultados">
+                            <i class="bi bi-search me-2"></i>
+                            No se encontraron resultados para "<strong>${escapeHtml(termino)}</strong>"
+                        </div>
+                    `;
+                } else {
+                    resultadosDiv.innerHTML = datos.map((persona, index) => `
+                        <div class="resultado-item" data-index="${index}"
+                             data-id-legajo="${persona.idLegajo}"
+                             data-tipo-legajo-id="${persona.tipoLegajoId}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="resultado-nombre">${escapeHtml(persona.nombreCompleto)}</div>
+                                    ${persona.domicilio ? `<div class="resultado-domicilio"><i class="bi bi-geo-alt me-1"></i>${escapeHtml(persona.domicilio)}</div>` : ''}
+                                </div>
+                                <div class="text-end">
+                                    <span class="resultado-legajo"><i class="bi bi-folder me-1"></i>Legajo: ${escapeHtml(persona.numeroLegajo)}</span>
+                                    ${persona.dni ? `<div class="resultado-domicilio">DNI: ${escapeHtml(persona.dni)}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                resultadosDiv.style.display = 'block';
+
+                // Agregar eventos click a los resultados
+                document.querySelectorAll('.resultado-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        seleccionarResultado(this);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error en la b&uacute;squeda:', error);
+                resultadosDiv.innerHTML = `
+                    <div class="no-resultados text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Error al realizar la b&uacute;squeda
+                    </div>
+                `;
+                resultadosDiv.style.display = 'block';
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Funci&oacute;n para seleccionar un resultado
+        function seleccionarResultado(elemento) {
+            const idLegajo = elemento.dataset.idLegajo;
+            const tipoLegajoId = elemento.dataset.tipoLegajoId;
+
+            // Redirigir a la p&aacute;gina de b&uacute;squeda/historial del legajo
+            window.location.href = '@Url.Action("Busqueda", "Inicio")/' + idLegajo + '/' + tipoLegajoId;
+        }
+
+        // Funci&oacute;n para escapar HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Funci&oacute;n para actualizar la selecci&oacute;n visual
+        function actualizarSeleccion() {
+            document.querySelectorAll('.resultado-item').forEach((item, index) => {
+                if (index === indiceSeleccionado) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // Evento de escritura con debounce
+        inputBusqueda.addEventListener('input', function() {
+            clearTimeout(timeoutId);
+            const termino = this.value.trim();
+
+            if (termino.length < 2) {
+                resultadosDiv.style.display = 'none';
+                return;
+            }
+
+            timeoutId = setTimeout(() => {
+                buscarPersonas(termino);
+            }, 300);
+        });
+
+        // Navegaci&oacute;n con teclado
+        inputBusqueda.addEventListener('keydown', function(e) {
+            if (resultadosDiv.style.display === 'none' || resultadosActuales.length === 0) return;
+
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    indiceSeleccionado = Math.min(indiceSeleccionado + 1, resultadosActuales.length - 1);
+                    actualizarSeleccion();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    indiceSeleccionado = Math.max(indiceSeleccionado - 1, 0);
+                    actualizarSeleccion();
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (indiceSeleccionado >= 0) {
+                        const elemento = document.querySelector(`.resultado-item[data-index="${indiceSeleccionado}"]`);
+                        if (elemento) {
+                            seleccionarResultado(elemento);
+                        }
+                    }
+                    break;
+                case 'Escape':
+                    resultadosDiv.style.display = 'none';
+                    indiceSeleccionado = -1;
+                    break;
+            }
+        });
+
+        // Cerrar resultados al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!inputBusqueda.contains(e.target) && !resultadosDiv.contains(e.target)) {
+                resultadosDiv.style.display = 'none';
+            }
+        });
+
+        // Focus en el input al cargar
+        inputBusqueda.focus();
+    });
+</script>
+}

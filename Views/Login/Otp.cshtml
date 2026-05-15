@@ -1,0 +1,201 @@
+@model OtpViewModel
+@{
+    ViewData["Title"] = "Verificación en Dos Pasos";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verificación en Dos Pasos - Entrevista OLV</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <style>
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .otp-input {
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            font-weight: bold;
+        }
+        .resend-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e9ecef;
+        }
+        .resend-button {
+            font-size: 0.9rem;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card shadow" style="width: 100%; max-width: 400px;">
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <i class="bi bi-shield-check" style="font-size: 2.5rem; color: #0d6efd;"></i>
+                <h4 class="mt-2">Verificación en Dos Pasos</h4>
+                <p class="text-success fw-bold">Se ha enviado un código a tu correo electrónico</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.MensajeError))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@Model.MensajeError
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.MensajeExito))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>@Model.MensajeExito
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <form asp-action="VerificarOtp" asp-controller="Login" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="OtpSessionId" />
+
+                <div class="mb-4">
+                    <label asp-for="Codigo" class="form-label">Código de Verificación</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input asp-for="Codigo"
+                               class="form-control otp-input"
+                               placeholder="000000"
+                               maxlength="6"
+                               pattern="[0-9]{6}"
+                               inputmode="numeric"
+                               autofocus
+                               required />
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <i class="bi bi-info-circle me-1"></i>El código expira en 5 minutos
+                    </small>
+                    <span asp-validation-for="Codigo" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-check-circle me-1"></i>Verificar
+                </button>
+
+                <div class="resend-section">
+                    <p class="text-muted text-center" style="font-size: 0.9rem; margin-bottom: 1rem;">
+                        ¿No recibiste el código?
+                    </p>
+                    <button type="button" id="btnReenviar" class="btn btn-outline-secondary w-100 resend-button" onclick="reenviarCodigo()">
+                        <i class="bi bi-arrow-clockwise me-1"></i><span id="textoBoton">Reenviar código</span>
+                    </button>
+                    <small id="textoContador" class="text-muted d-block text-center mt-2" style="display: none;"></small>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a asp-action="Index" asp-controller="Login" class="text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-arrow-left me-1"></i>Volver a ingresar usuario
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let contadorReenvio = 0;
+        let timerReenvio = null;
+        const sessionId = document.querySelector('input[name="OtpSessionId"]').value;
+
+        function reenviarCodigo() {
+            const btnReenviar = document.getElementById('btnReenviar');
+            const textoBoton = document.getElementById('textoBoton');
+            const formToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            btnReenviar.disabled = true;
+            textoBoton.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Reenviando...';
+
+                fetch('@Url.Action("ReenviarOtp", "Login")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': formToken
+                },
+                body: new URLSearchParams({
+                    '__RequestVerificationToken': formToken,
+                    'sessionId': sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('success', data.message);
+                    iniciarContadorReenvio();
+                } else {
+                    mostrarAlerta('danger', data.message);
+                    btnReenviar.disabled = false;
+                    textoBoton.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Reenviar código';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('danger', 'Error al reenviar el código. Intenta nuevamente.');
+                btnReenviar.disabled = false;
+                textoBoton.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Reenviar código';
+            });
+        }
+
+        function iniciarContadorReenvio() {
+            contadorReenvio = 60;
+            const btnReenviar = document.getElementById('btnReenviar');
+            const textoContador = document.getElementById('textoContador');
+            const textoBoton = document.getElementById('textoBoton');
+
+            textoContador.style.display = 'block';
+            btnReenviar.style.display = 'none';
+
+            timerReenvio = setInterval(() => {
+                contadorReenvio--;
+                textoContador.textContent = `Podrás reenviar en ${contadorReenvio} segundos`;
+
+                if (contadorReenvio <= 0) {
+                    clearInterval(timerReenvio);
+                    textoContador.style.display = 'none';
+                    btnReenviar.style.display = 'block';
+                    btnReenviar.disabled = false;
+                    textoBoton.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Reenviar código';
+                }
+            }, 1000);
+        }
+
+        function mostrarAlerta(tipo, mensaje) {
+            const alertaDiv = document.createElement('div');
+            alertaDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+            alertaDiv.setAttribute('role', 'alert');
+            alertaDiv.innerHTML = `
+                <i class="bi bi-${tipo === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2"></i>
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            const formElement = document.querySelector('form');
+            formElement.parentElement.insertBefore(alertaDiv, formElement);
+        }
+
+        // Solo permitir dígitos en el campo de código
+        document.getElementById("Codigo").addEventListener("input", function(e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, "");
+        });
+    </script>
+</body>
+</html>

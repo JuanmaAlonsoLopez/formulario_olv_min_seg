@@ -1,0 +1,780 @@
+@model formulario_olv.Models.EntrevistaViewModel
+@using formulario_olv.Services
+@{
+    ViewData["Title"] = "Entrevista OLV";
+    var catalogos = ViewBag.Catalogos as CatalogosResponse;
+    bool soloLectura = ViewBag.SoloLectura == true;
+}
+
+<div class="entrevista-container">
+    <!-- Botón volver -->
+    <div class="mb-3">
+        <a asp-controller="Inicio" asp-action="Busqueda"
+           asp-route-idLegajo="@Model.IdLegajo"
+           asp-route-tipoLegajoId="@Model.TipoLegajoId"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Volver al historial
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- FICHA DE IDENTIFICACIÓN -->
+    <div class="card ficha-identificacion mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Ficha de Identificación</h5>
+        </div>
+        <div class="card-body">
+            <div class="ficha-content">
+                <div class="ficha-foto">
+                    <div class="foto-placeholder">
+                        <img src="~/Inicio/Foto/@Model.IdLegajo"
+                             alt="Foto"
+                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" viewBox="0 0 16 16" style="display: none;">
+                            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ficha-datos">
+                    <div class="ficha-row">
+                        <div class="ficha-field">
+                            <span class="ficha-label">Nombre y Apellido</span>
+                            <span class="ficha-value">@Model.NombreApellido</span>
+                        </div>
+                    </div>
+                    <div class="ficha-row">
+                        <div class="ficha-field">
+                            <span class="ficha-label">DNI</span>
+                            <span class="ficha-value">@Model.DNI</span>
+                        </div>
+                        <div class="ficha-field">
+                            <span class="ficha-label">Legajo</span>
+                            <span class="ficha-value">@Model.Legajo</span>
+                        </div>
+                    </div>
+                    <div class="ficha-row">
+                        <div class="ficha-field">
+                            <span class="ficha-label">Delito</span>
+                            <span class="ficha-value">@Model.Delito</span>
+                        </div>
+                        <div class="ficha-field">
+                            <span class="ficha-label">Nivel de Riesgo</span>
+                            <span class="ficha-value riesgo-@Model.NivelRiesgo.ToLower()">@Model.NivelRiesgo</span>
+                        </div>
+                    </div>
+                    <div class="ficha-row">
+                        <div class="ficha-field">
+                            <span class="ficha-label">Modalidad de Tutela</span>
+                            <span class="ficha-value">@Model.ModalidadTutela</span>
+                        </div>
+                        <div class="ficha-field">
+                            <span class="ficha-label">Periodicidad</span>
+                            <span class="ficha-value">@Model.PeriodicidadEntrevistas</span>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Direccion))
+                    {
+                        <div class="ficha-row">
+                            <div class="ficha-field" style="flex: 1;">
+                                <span class="ficha-label">Dirección</span>
+                                <span class="ficha-value">@Model.Direccion</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO DE ENTREVISTA -->
+    <form asp-action="Index" method="post" id="entrevistaForm">
+        @if (!soloLectura)
+        {
+            @Html.AntiForgeryToken()
+        }
+
+        <!-- Campos ocultos para identificadores del legajo -->
+        <input type="hidden" asp-for="IdLegajo" />
+        <input type="hidden" asp-for="TipoLegajoId" />
+
+        <!-- Campos ocultos para datos de ficha -->
+        <input type="hidden" asp-for="NombreApellido" />
+        <input type="hidden" asp-for="DNI" />
+        <input type="hidden" asp-for="Legajo" />
+        <input type="hidden" asp-for="Delito" />
+        <input type="hidden" asp-for="NivelRiesgo" />
+        <input type="hidden" asp-for="ModalidadTutela" />
+        <input type="hidden" asp-for="PeriodicidadEntrevistas" />
+        <input type="hidden" asp-for="Direccion" />
+
+        <!-- SECCIÓN 1: Datos de Entrevista -->
+        <div class="card seccion-formulario mb-3">
+            <div class="card-header seccion-header" data-bs-toggle="collapse" data-bs-target="#seccion1">
+                <h6 class="mb-0">
+                    <span class="seccion-numero">1</span>
+                    Datos de Entrevista
+                    <span class="collapse-icon">&#9660;</span>
+                </h6>
+            </div>
+            <div id="seccion1" class="collapse show">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- 1. Número de entrevista -->
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="NumeroEntrevista" class="form-label"></label>
+                            <input asp-for="NumeroEntrevista" class="form-control" readonly />
+                        </div>
+
+                        <!-- 2. Fecha y hora -->
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="FechaHora" class="form-label"></label>
+                            <input asp-for="FechaHora" type="datetime-local" class="form-control" readonly />
+                        </div>
+
+                        <!-- 3. Coordenadas GPS -->
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="CoordenadasGPS" class="form-label"></label>
+                            <div class="input-group">
+                                <input asp-for="CoordenadasGPS" class="form-control" readonly placeholder="Sin coordenadas" />
+                                @if (!soloLectura)
+                                {
+                                    <button type="button" class="btn btn-outline-primary" id="btnObtenerGPS">
+                                        <span class="gps-icon">&#128205;</span> Obtener
+                                    </button>
+                                }
+                            </div>
+                            <div id="gpsStatus" class="form-text"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: Verificación de Domicilio -->
+        <div class="card seccion-formulario mb-3">
+            <div class="card-header seccion-header" data-bs-toggle="collapse" data-bs-target="#seccion2">
+                <h6 class="mb-0">
+                    <span class="seccion-numero">2</span>
+                    Verificación de Domicilio
+                    <span class="collapse-icon">&#9660;</span>
+                </h6>
+            </div>
+            <div id="seccion2" class="collapse show">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- 4. Domicilio verificado -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DomicilioVerificado" class="form-label">4. Domicilio</label>
+                            <select asp-for="DomicilioVerificado" class="form-select" id="domicilioVerificado">
+                                <option value="">Seleccione...</option>
+                                <option value="Verificado">Verificado</option>
+                                <option value="NoVerificado">No verificado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 4a. Observaciones domicilio (si verificado) -->
+                    <div class="row campo-condicional" id="campoObservacionesDomicilio">
+                        <div class="col-12 mb-3">
+                            <label asp-for="ObservacionesDomicilio" class="form-label">4a. Observaciones del domicilio</label>
+                            <textarea asp-for="ObservacionesDomicilio" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 5. Nombre persona que atendió (si verificado) -->
+                    <div class="row campo-condicional" id="campoNombrePersonaVerificado">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">5. Nombre de persona que atendió <span class="text-muted">(opcional)</span></label>
+                            <input name="NombrePersonaAtendio" class="form-control nombre-persona-input" placeholder="En caso de que no esté, registrar quien contestó" value="@Model.NombrePersonaAtendio" />
+                        </div>
+                    </div>
+
+                    <!-- 4b. Motivo no verificado (si no verificado) -->
+                    <div class="row campo-condicional" id="campoMotivoNoVerificado">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="MotivoNoVerificado" class="form-label">4b. Motivo no verificado</label>
+                            <select asp-for="MotivoNoVerificado" class="form-select" id="motivoNoVerificado">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.MotivosNoVerificado != null)
+                                {
+                                    foreach (var item in catalogos.MotivosNoVerificado)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3 campo-condicional" id="campoMotivoOtro">
+                            <label asp-for="MotivoNoVerificadoOtro" class="form-label">Especificar otro motivo</label>
+                            <input asp-for="MotivoNoVerificadoOtro" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- 5. Nombre persona que atendió (si no verificado) -->
+                    <div class="row campo-condicional" id="campoNombrePersonaNoVerificado">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">5. Nombre de persona que atendió <span class="text-muted">(opcional)</span></label>
+                            <input name="NombrePersonaAtendio" class="form-control nombre-persona-input" placeholder="En caso de que alguien haya atendido" value="@Model.NombrePersonaAtendio" />
+                        </div>
+                    </div>
+
+                    <!-- Alerta de cierre por domicilio no verificado -->
+                    <div class="row campo-condicional" id="alertaNoVerificado">
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-warning mb-0">
+                                <strong>Entrevista con novedad:</strong> El domicilio no pudo ser verificado. La entrevista se cerrará para que el equipo de DPL actualice el domicilio.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: Situación Judicial -->
+        <div class="card seccion-formulario mb-3 seccion-entrevista-completa">
+            <div class="card-header seccion-header" data-bs-toggle="collapse" data-bs-target="#seccion3">
+                <h6 class="mb-0">
+                    <span class="seccion-numero">3</span>
+                    Situación Judicial
+                    <span class="collapse-icon">&#9660;</span>
+                </h6>
+            </div>
+            <div id="seccion3" class="collapse show">
+                <div class="card-body">
+                    <!-- 6. Cumple presentaciones -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CumplePresentaciones" class="form-label">6. Cumple presentaciones</label>
+                            <select asp-for="CumplePresentaciones" class="form-select" id="cumplePresentaciones">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 6a. Cuáles incumple (si no cumple) -->
+                    <div class="row campo-condicional" id="campoPresentacionesIncumplidas">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">6a. ¿Cuáles incumple?</label>
+                            @if (catalogos?.MedidasJudiciales != null)
+                            {
+                                foreach (var item in catalogos.MedidasJudiciales)
+                                {
+                                    var checkedMedida = Model.PresentacionesIncumplidas.Contains(item.Id.ToString()) ? "checked" : "";
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="PresentacionesIncumplidas" value="@item.Id" id="chkMedida@(item.Id)" @checkedMedida>
+                                        <label class="form-check-label" for="chkMedida@(item.Id)">@item.Descripcion</label>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- 7. Tratamiento obligatorio -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TratamientoObligatorio" class="form-label">7. Tratamiento obligatorio</label>
+                            <select asp-for="TratamientoObligatorio" class="form-select" id="tratamientoObligatorio">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.Tratamientos != null)
+                                {
+                                    foreach (var item in catalogos.Tratamientos)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- 7a. Asiste al tratamiento -->
+                        <div class="col-md-6 mb-3 campo-condicional" id="campoAsisteTratamiento">
+                            <label asp-for="AsisteTratamiento" class="form-label">7a. ¿Asiste al tratamiento?</label>
+                            <select asp-for="AsisteTratamiento" class="form-select">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 8. Programa de reeducación -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="ProgramaReeducacion" class="form-label">8. Programa de reeducación</label>
+                            <select asp-for="ProgramaReeducacion" class="form-select" id="programaReeducacion">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+
+                        <!-- 8a. ¿Cuál programa? -->
+                        <div class="col-md-4 mb-3 campo-condicional" id="campoCualPrograma">
+                            <label asp-for="CualProgramaReeducacion" class="form-label">8a. ¿Cuál programa?</label>
+                            <input asp-for="CualProgramaReeducacion" class="form-control" />
+                        </div>
+
+                        <!-- 8b. Asiste al programa -->
+                        <div class="col-md-4 mb-3 campo-condicional" id="campoAsistePrograma">
+                            <label asp-for="AsistePrograma" class="form-label">8b. ¿Asiste al programa?</label>
+                            <select asp-for="AsistePrograma" class="form-select">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 9. Restricción contacto víctimas -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RestriccionContactoVictimas" class="form-label">9. Restricción de contacto con víctimas</label>
+                            <select asp-for="RestriccionContactoVictimas" class="form-select" id="restriccionVictimas">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 9b (si hay restricción) -->
+                    <div class="row campo-condicional" id="campoRestriccionDetalles">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="IncumplimientoDetectado" class="form-label">9b. Incumplimiento detectado</label>
+                            <select asp-for="IncumplimientoDetectado" class="form-select" id="incumplimientoDetectado">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Especificar incumplimiento -->
+                    <div class="row campo-condicional" id="campoIncumplimientoEspecificar">
+                        <div class="col-12 mb-3">
+                            <label asp-for="IncumplimientoEspecificar" class="form-label">Especificar incumplimiento</label>
+                            <textarea asp-for="IncumplimientoEspecificar" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 10. Tipo de monitoreo -->
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">10. Tipo de monitoreo</label>
+                            @if (catalogos?.TiposMonitoreo != null)
+                            {
+                                foreach (var item in catalogos.TiposMonitoreo)
+                                {
+                                    var esOtro = item.Descripcion.ToLower() == "otro";
+                                    var checkedMonitoreo = Model.TipoMonitoreo.Contains(item.Id.ToString()) ? "checked" : "";
+                                    <div class="form-check">
+                                        <input class="form-check-input @(esOtro ? "tipo-monitoreo-otro" : "")" type="checkbox" name="TipoMonitoreo" value="@item.Id" id="chkMonitoreo@(item.Id)" @checkedMonitoreo>
+                                        <label class="form-check-label" for="chkMonitoreo@(item.Id)">@item.Descripcion</label>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row campo-condicional" id="campoMonitoreoOtro">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TipoMonitoreoOtro" class="form-label">Especificar otro tipo de monitoreo</label>
+                            <input asp-for="TipoMonitoreoOtro" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 4: Situación Habitacional -->
+        <div class="card seccion-formulario mb-3 seccion-entrevista-completa">
+            <div class="card-header seccion-header" data-bs-toggle="collapse" data-bs-target="#seccion4">
+                <h6 class="mb-0">
+                    <span class="seccion-numero">4</span>
+                    Situación Habitacional
+                    <span class="collapse-icon">&#9660;</span>
+                </h6>
+            </div>
+            <div id="seccion4" class="collapse show">
+                <div class="card-body">
+                    <!-- 11. Tutor domiciliario -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TutorDomiciliario" class="form-label">11. Tutor domiciliario</label>
+                            <select asp-for="TutorDomiciliario" class="form-select">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.EstadosTutor != null)
+                                {
+                                    foreach (var item in catalogos.EstadosTutor)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- 12. Grupo conviviente -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="GrupoConviviente" class="form-label">12. Grupo conviviente</label>
+                            <select asp-for="GrupoConviviente" class="form-select" id="grupoConviviente">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.GruposConviviente != null)
+                                {
+                                    foreach (var item in catalogos.GruposConviviente)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 12a. Personas en hogar (si no vive solo) -->
+                    <div class="row campo-condicional" id="campoPersonasHogar">
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="AdultosEnHogar" class="form-label">12a. Adultos en el hogar</label>
+                            <input asp-for="AdultosEnHogar" type="number" class="form-control" min="0" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="NinosEnHogar" class="form-label">Niños en el hogar</label>
+                            <input asp-for="NinosEnHogar" type="number" class="form-control" min="0" />
+                        </div>
+
+                        <!-- 12b. Relación convivientes -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RelacionConvivientes" class="form-label">12b. Relación con convivientes</label>
+                            <select asp-for="RelacionConvivientes" class="form-select" id="relacionConvivientes">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.RelacionesConviviente != null)
+                                {
+                                    foreach (var item in catalogos.RelacionesConviviente)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 12c. Observaciones relación (si conflictiva) -->
+                    <div class="row campo-condicional" id="campoObservacionesRelacion">
+                        <div class="col-12 mb-3">
+                            <label asp-for="ObservacionesRelacion" class="form-label">12c. Observaciones sobre la relación</label>
+                            <textarea asp-for="ObservacionesRelacion" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 13. Familiares a cargo -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FamiliaresACargo" class="form-label">13. Familiares a cargo</label>
+                            <select asp-for="FamiliaresACargo" class="form-select">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.FamiliaresCargo != null)
+                                {
+                                    foreach (var item in catalogos.FamiliaresCargo)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 5: Situación Laboral -->
+        <div class="card seccion-formulario mb-3 seccion-entrevista-completa">
+            <div class="card-header seccion-header" data-bs-toggle="collapse" data-bs-target="#seccion5">
+                <h6 class="mb-0">
+                    <span class="seccion-numero">5</span>
+                    Situación Laboral
+                    <span class="collapse-icon">&#9660;</span>
+                </h6>
+            </div>
+            <div id="seccion5" class="collapse show">
+                <div class="card-body">
+                    <!-- 14. Situación laboral -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SituacionLaboral" class="form-label">14. Situación laboral</label>
+                            <select asp-for="SituacionLaboral" class="form-select" id="situacionLaboral">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.SituacionesLaborales != null)
+                                {
+                                    foreach (var item in catalogos.SituacionesLaborales)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 15a, 15b, 15c (si trabaja) -->
+                    <div class="row campo-condicional" id="campoDetallesLaboral">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Rubro" class="form-label">15a. Rubro</label>
+                            <select asp-for="Rubro" class="form-select">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.RubrosLaborales != null)
+                                {
+                                    foreach (var item in catalogos.RubrosLaborales)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="DomicilioLaboral" class="form-label">15b. Domicilio laboral</label>
+                            <input asp-for="DomicilioLaboral" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="TiempoTrabajando" class="form-label">15c. Tiempo trabajando (meses)</label>
+                            <input asp-for="TiempoTrabajando" type="number" class="form-control" min="0" />
+                        </div>
+                    </div>
+
+                    <!-- 16. Actividad educativa -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="ActividadEducativa" class="form-label">16. Actividad educativa</label>
+                            <select asp-for="ActividadEducativa" class="form-select" id="actividadEducativa">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 mb-3 campo-condicional" id="campoCualEducativa">
+                            <label asp-for="CualActividadEducativa" class="form-label">¿Cuál actividad educativa?</label>
+                            <input asp-for="CualActividadEducativa" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 6: Salud -->
+        <div class="card seccion-formulario mb-3 seccion-entrevista-completa">
+            <div class="card-header seccion-header" data-bs-toggle="collapse" data-bs-target="#seccion6">
+                <h6 class="mb-0">
+                    <span class="seccion-numero">6</span>
+                    Salud
+                    <span class="collapse-icon">&#9660;</span>
+                </h6>
+            </div>
+            <div id="seccion6" class="collapse show">
+                <div class="card-body">
+                    <!-- 17. Consumo de sustancias -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConsumoSustancias" class="form-label">17. Consumo de sustancias</label>
+                            <select asp-for="ConsumoSustancias" class="form-select" id="consumoSustancias">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 18a. ¿Cuáles sustancias? (si consume) -->
+                    <div class="row campo-condicional" id="campoSustancias">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">18a. ¿Cuáles sustancias?</label>
+                            @if (catalogos?.Sustancias != null)
+                            {
+                                foreach (var item in catalogos.Sustancias)
+                                {
+                                    var esOtro = item.Descripcion.ToLower() == "otro";
+                                    var checkedSustancia = Model.CualesSustancias.Contains(item.Id.ToString()) ? "checked" : "";
+                                    <div class="form-check">
+                                        <input class="form-check-input @(esOtro ? "sustancia-otro" : "")" type="checkbox" name="CualesSustancias" value="@item.Id" id="chkSustancia@(item.Id)" @checkedSustancia>
+                                        <label class="form-check-label" for="chkSustancia@(item.Id)">@item.Descripcion</label>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="campo-condicional" id="campoOtraSustancia">
+                                <label asp-for="OtraSustancia" class="form-label">Especificar otra sustancia</label>
+                                <input asp-for="OtraSustancia" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 18b. Tratamiento consumo -->
+                    <div class="row campo-condicional" id="campoTratamientoConsumo">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TratamientoConsumo" class="form-label">18b. Tratamiento por consumo</label>
+                            <select asp-for="TratamientoConsumo" class="form-select">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 19. Tiene Obra Social -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TieneObraSocial" class="form-label">19. Tiene Obra Social</label>
+                            <select asp-for="TieneObraSocial" class="form-select" id="tieneObraSocial">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones Obra Social (si tiene) -->
+                    <div class="row campo-condicional" id="campoObservacionObraSocial">
+                        <div class="col-12 mb-3">
+                            <label asp-for="ObservacionObraSocial" class="form-label">Observaciones</label>
+                            <textarea asp-for="ObservacionObraSocial" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 20. Tratamiento de salud -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="TratamientoSalud" class="form-label">20. Tratamiento de salud</label>
+                            <select asp-for="TratamientoSalud" class="form-select" id="tratamientoSalud">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 mb-3 campo-condicional" id="campoCualTratamientoSalud">
+                            <label asp-for="CualTratamientoSalud" class="form-label">¿Cuál tratamiento?</label>
+                            <input asp-for="CualTratamientoSalud" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- 20a. Tiene enfermedad -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="TieneEnfermedad" class="form-label">20a. Tiene enfermedad</label>
+                            <select asp-for="TieneEnfermedad" class="form-select" id="tieneEnfermedad">
+                                <option value="">Seleccione...</option>
+                                <option value="Si">Sí</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 mb-3 campo-condicional" id="campoCualEnfermedad">
+                            <label asp-for="CualEnfermedad" class="form-label">¿Cuál enfermedad?</label>
+                            <input asp-for="CualEnfermedad" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- 21. Riesgo evidente -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">21. Riesgo evidente</label>
+                            @if (catalogos?.RiesgosEvidentes != null)
+                            {
+                                foreach (var item in catalogos.RiesgosEvidentes)
+                                {
+                                    var esOtro = item.Descripcion.ToLower() == "otro";
+                                    var checkedRiesgo = Model.RiesgoEvidente.Contains(item.Id.ToString()) ? "checked" : "";
+                                    <div class="form-check">
+                                        <input class="form-check-input @(esOtro ? "riesgo-otro" : "")" type="checkbox" name="RiesgoEvidente" value="@item.Id" id="chkRiesgo@(item.Id)" @checkedRiesgo>
+                                        <label class="form-check-label" for="chkRiesgo@(item.Id)">@item.Descripcion</label>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div class="col-md-6 mb-3 campo-condicional" id="campoOtroRiesgo">
+                            <label asp-for="OtroRiesgo" class="form-label">Especificar otro riesgo</label>
+                            <input asp-for="OtroRiesgo" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 7: Cierre -->
+        <div class="card seccion-formulario mb-3 seccion-entrevista-completa">
+            <div class="card-header seccion-header" data-bs-toggle="collapse" data-bs-target="#seccion7">
+                <h6 class="mb-0">
+                    <span class="seccion-numero">7</span>
+                    Cierre
+                    <span class="collapse-icon">&#9660;</span>
+                </h6>
+            </div>
+            <div id="seccion7" class="collapse show">
+                <div class="card-body">
+                    <!-- 22. Observaciones generales -->
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label asp-for="ObservacionesGenerales" class="form-label">22. Observaciones generales</label>
+                            <textarea asp-for="ObservacionesGenerales" class="form-control" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 23. Cierre -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Cierre" class="form-label">23. Cierre</label>
+                            <select asp-for="Cierre" class="form-select" id="cierre">
+                                <option value="">Seleccione...</option>
+                                @if (catalogos?.CierresEntrevista != null)
+                                {
+                                    foreach (var item in catalogos.CierresEntrevista)
+                                    {
+                                        <option value="@item.Id">@item.Descripcion</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Especificar otro cierre -->
+                    <div class="row campo-condicional" id="campoCierreOtro">
+                        <div class="col-12 mb-3">
+                            <label asp-for="CierreOtro" class="form-label">Especificar</label>
+                            <textarea asp-for="CierreOtro" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!soloLectura)
+        {
+            <!-- Botón de envío -->
+            <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-primary btn-lg">Guardar Entrevista</button>
+            </div>
+        }
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    @if (soloLectura)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var form = document.getElementById('entrevistaForm');
+                if (form) {
+                    form.querySelectorAll('select, input:not([type="hidden"]), textarea').forEach(function (el) {
+                        el.disabled = true;
+                    });
+                }
+            });
+        </script>
+    }
+}

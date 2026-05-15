@@ -1,0 +1,496 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+/* ==========================================
+   ENTREVISTA FORMULARIO - ESTILOS
+   ========================================== */
+
+.entrevista-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* --- FICHA DE IDENTIFICACIÓN --- */
+.ficha-identificacion {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ficha-identificacion .card-header {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  border-bottom: none;
+}
+
+.ficha-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ficha-foto {
+  display: flex;
+  justify-content: center;
+}
+
+.foto-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  border: 3px solid #dee2e6;
+}
+
+.ficha-datos {
+  flex: 1;
+}
+
+.ficha-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ficha-field {
+  flex: 1;
+  min-width: 150px;
+}
+
+.ficha-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.ficha-value {
+  display: block;
+  font-weight: 500;
+  color: #212529;
+}
+
+/* Colores para nivel de riesgo */
+.riesgo-bajo {
+  color: #198754;
+}
+
+.riesgo-medio {
+  color: #fd7e14;
+}
+
+.riesgo-alto {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* --- SECCIONES DEL FORMULARIO --- */
+.seccion-formulario {
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.seccion-header {
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.seccion-header:hover {
+  background: #e9ecef;
+}
+
+.seccion-header h6 {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-weight: 600;
+}
+
+.seccion-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #0d6efd;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.collapse-icon {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.seccion-header[aria-expanded="false"] .collapse-icon {
+  transform: rotate(-90deg);
+}
+
+/* --- CAMPOS CONDICIONALES --- */
+.campo-condicional {
+  display: none;
+}
+
+.campo-condicional.visible {
+  display: flex;
+}
+
+/* --- BOTÓN GPS --- */
+#btnObtenerGPS {
+  white-space: nowrap;
+  min-width: 110px;
+}
+
+#btnObtenerGPS .gps-icon {
+  margin-right: 4px;
+}
+
+#btnObtenerGPS.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+#btnObtenerGPS.success {
+  background-color: #198754;
+  border-color: #198754;
+  color: white;
+}
+
+#btnObtenerGPS.error {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+#gpsStatus {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+#gpsStatus.text-success {
+  color: #198754 !important;
+}
+
+#gpsStatus.text-danger {
+  color: #dc3545 !important;
+}
+
+/* --- FORMULARIO GENERAL --- */
+.form-label {
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.form-select, .form-control {
+  border-color: #ced4da;
+}
+
+.form-select:focus, .form-control:focus {
+  border-color: #86b7fe;
+}
+
+.form-check {
+  padding-left: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-check-input {
+  margin-left: -1.75rem;
+}
+
+.form-check-label {
+  cursor: pointer;
+}
+
+/* --- BOTÓN ENVIAR --- */
+.btn-primary.btn-lg {
+  padding: 0.875rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  border: none;
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-primary.btn-lg:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+}
+
+.btn-primary.btn-lg:active {
+  transform: translateY(0);
+}
+
+/* --- ALERTAS --- */
+.alert-success {
+  background-color: #d1e7dd;
+  border-color: #badbcc;
+  color: #0f5132;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffecb5;
+  color: #664d03;
+  border-left: 4px solid #ffc107;
+}
+
+.alert-warning strong {
+  color: #856404;
+}
+
+/* --- SECCIONES OCULTABLES --- */
+.seccion-entrevista-completa {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.seccion-entrevista-completa[style*="display: none"] {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* ==========================================
+   RESPONSIVE - MOBILE FIRST
+   ========================================== */
+
+/* Mobile (< 576px) */
+@media (max-width: 575.98px) {
+  .entrevista-container {
+    padding: 0 10px;
+  }
+
+  .ficha-content {
+    text-align: center;
+  }
+
+  .ficha-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ficha-field {
+    min-width: 100%;
+  }
+
+  .ficha-label {
+    font-size: 0.7rem;
+  }
+
+  .ficha-value {
+    font-size: 0.95rem;
+  }
+
+  .seccion-header h6 {
+    font-size: 0.9rem;
+  }
+
+  .seccion-numero {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  .form-label {
+    font-size: 0.85rem;
+  }
+
+  .btn-primary.btn-lg {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  /* Inputs y selects más grandes para touch */
+  .form-control, .form-select {
+    font-size: 16px; /* Evita zoom en iOS */
+    padding: 0.625rem 0.75rem;
+    min-height: 48px;
+  }
+
+  .form-check {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+  }
+
+  .form-check-label {
+    padding-left: 0.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Tablet (576px - 768px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .ficha-content {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .ficha-foto {
+    flex-shrink: 0;
+    margin-right: 1.5rem;
+  }
+
+  .ficha-row {
+    justify-content: flex-start;
+  }
+
+  .ficha-field {
+    flex: 0 0 calc(50% - 0.5rem);
+    min-width: auto;
+  }
+}
+
+/* Desktop (>= 768px) */
+@media (min-width: 768px) {
+  .ficha-content {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .ficha-foto {
+    flex-shrink: 0;
+    margin-right: 2rem;
+  }
+
+  .foto-placeholder {
+    width: 120px;
+    height: 120px;
+  }
+
+  .foto-placeholder svg {
+    width: 96px;
+    height: 96px;
+  }
+
+  .ficha-field {
+    flex: 0 0 auto;
+    min-width: 180px;
+  }
+
+  .seccion-header h6 {
+    font-size: 1rem;
+  }
+
+  /* Campos en filas de 2-3 columnas donde aplique */
+  .row > .col-md-4,
+  .row > .col-md-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Large Desktop (>= 992px) */
+@media (min-width: 992px) {
+  .entrevista-container {
+    max-width: 1000px;
+  }
+
+  .ficha-row {
+    gap: 1.5rem;
+  }
+
+  .ficha-field {
+    min-width: 200px;
+  }
+}
+
+/* ==========================================
+   ANIMACIONES
+   ========================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.campo-condicional.visible {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Transición suave para colapso */
+.collapse {
+  transition: none;
+}
+
+.collapsing {
+  transition: height 0.25s ease;
+}
+
+/* ==========================================
+   UTILIDADES
+   ========================================== */
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+/* Scrollbar personalizado para textareas */
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+textarea.form-control::-webkit-scrollbar {
+  width: 8px;
+}
+
+textarea.form-control::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+textarea.form-control::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+textarea.form-control::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
