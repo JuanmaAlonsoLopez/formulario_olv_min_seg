@@ -72,6 +72,8 @@ namespace formulario_olv.Controllers
 
         // GET: /Inicio/BuscarPersonas?termino=xxx
         [HttpGet]
+		[Produces("application/json")] 
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> BuscarPersonas(string termino)
         {
             _logger.LogInformation("Frontend: Recibida búsqueda con término: '{Termino}'", termino);

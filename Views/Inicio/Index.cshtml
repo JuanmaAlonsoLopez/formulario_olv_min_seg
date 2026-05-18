@@ -188,9 +188,34 @@
             loadingIndicator.style.display = 'block';
 
             try {
-                // Usar ruta relativa para que funcione en sub-aplicaciones de IIS
-                const response = await fetch('@Url.Action("BuscarPersonas", "Inicio")?termino=' + encodeURIComponent(termino));
-                const datos = await response.json();
+                // 1. Añadimos cabeceras estrictas para evitar bloqueos del Proxy
+                const response = await fetch('@Url.Action("BuscarPersonas", "Inicio")?termino=' + encodeURIComponent(termino), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error HTTP: ' + response.status);
+                }
+
+                // 2. Leemos en texto primero para evitar que explote si el proxy inyecta código
+                const textData = await response.text();
+                let datos = [];
+                
+                try {
+                    datos = JSON.parse(textData);
+                } catch (e) {
+                    console.error("El servidor no devolvió un JSON válido. Recibimos:", textData);
+                    throw new Error("Fallo al parsear JSON");
+                }
+
+                // 3. Verificación de seguridad
+                if (!Array.isArray(datos)) {
+                    datos = [];
+                }
 
                 resultadosActuales = datos;
                 indiceSeleccionado = -1;
@@ -223,7 +248,6 @@
 
                 resultadosDiv.style.display = 'block';
 
-                // Agregar eventos click a los resultados
                 document.querySelectorAll('.resultado-item').forEach(item => {
                     item.addEventListener('click', function() {
                         seleccionarResultado(this);
@@ -231,11 +255,11 @@
                 });
 
             } catch (error) {
-                console.error('Error en la b&uacute;squeda:', error);
+                console.error('Error en la búsqueda:', error);
                 resultadosDiv.innerHTML = `
                     <div class="no-resultados text-danger">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        Error al realizar la b&uacute;squeda
+                        Error al obtener los datos del servidor
                     </div>
                 `;
                 resultadosDiv.style.display = 'block';
